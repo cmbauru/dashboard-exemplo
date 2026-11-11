@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+:root {
+  --cm-green-dark: #004a2f;
+  --cm-green-deeper: #003521;
+  --cm-green-primary: #2f7958;
+  --cm-green-sage: #658b61;
+  --cm-green-light: #a2c682;
+  --cm-surface-bg: #f2f5f3;
+  --cm-panel-bg: #ffffff;
+  --cm-border: #d0dbd5;
+  --cm-border-strong: #9eb2a8;
+  --cm-text-primary: #111c16;
+  --cm-text-secondary: #3f5248;
+  --cm-text-muted: #64786d;
+  --cm-danger: #db0a13;
+  --cm-warning: #b45309;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--cm-surface-bg);
+  color: var(--cm-text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Custom subtle scrollbars for dense matrix tables */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #e6ece9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #9cb0a5;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2f7958;
+}
+
