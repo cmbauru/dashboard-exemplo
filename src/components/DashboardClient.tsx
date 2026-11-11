@@ -37,6 +37,14 @@ function getProcessKey(p: ProcessoItem): string {
   return `${p.ordem}::${p.processoInterno}`;
 }
 
+const SHORT_STAGE_LABELS: Record<EstagioOperacional, string> = {
+  FASE_INTERNA: "Instrução (Int.)",
+  COTACAO_E_ABERTURA: "Abertura / Cotação",
+  HABILITACAO_E_HOMOLOGACAO: "Habilit. / Homol.",
+  EMPENHO_E_EXECUCAO: "Empenho / AF",
+  ENTREGA_E_ENCERRAMENTO: "Almox. / Patrim.",
+};
+
 export default function DashboardClient({ initialData }: DashboardClientProps) {
   const [data, setData] = useState<DashboardData>(initialData);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -58,10 +66,10 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
   // Independent Process Detail Selection (persists across background refreshes)
   const [selectedProcessKey, setSelectedProcessKey] = useState<string | null>(null);
 
-  // TV Mode state
+  // TV Mode state (increased default page size since top cards are now compact)
   const [tvMode, setTvMode] = useState(false);
   const [tvAutoRotate, setTvAutoRotate] = useState(true);
-  const [tvPageSize, setTvPageSize] = useState<number>(10);
+  const [tvPageSize, setTvPageSize] = useState<number>(15);
   const [tvCurrentPage, setTvCurrentPage] = useState<number>(0);
 
   const isFetchingRef = useRef(false);
@@ -229,56 +237,54 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
         onTriggerSync={fetchLatestData}
       />
 
-      {/* MAIN INSTITUTIONAL HEADER */}
-      <header className="bg-[#111c17] border-b-2 border-[#2f7958]">
-        <div className="max-w-[2400px] mx-auto px-3 sm:px-6 py-3 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-          <div className="flex items-center gap-4">
-            {/* Official Logo of Câmara Municipal de Bauru on high-contrast institutional plaque */}
+      {/* COMPACT MAIN INSTITUTIONAL HEADER */}
+      <header className="bg-[#111c17] border-b border-[#2f7958]">
+        <div className="max-w-[2400px] mx-auto px-3 sm:px-5 py-2 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
+          <div className="flex items-center gap-3">
+            {/* Official Logo of Câmara Municipal de Bauru */}
             <a
               href="https://www.bauru.sp.leg.br"
               target="_blank"
               rel="noopener noreferrer"
-              className="shrink-0 bg-[#f4f7f5] px-3 py-1.5 border-l-4 border-l-[#2f7958] border border-[#345243] focus:outline-none"
+              className="shrink-0 bg-[#f4f7f5] px-2.5 py-1 border-l-4 border-l-[#2f7958] border border-[#345243] focus:outline-none"
               title="Portal da Câmara Municipal de Bauru"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/logo-camara-bauru.png"
                 alt="Câmara Municipal de Bauru"
-                className={`${tvMode ? "h-11 sm:h-13" : "h-9 sm:h-11"} w-auto object-contain`}
+                className={`${tvMode ? "h-9 sm:h-10" : "h-7 sm:h-8"} w-auto object-contain`}
               />
             </a>
 
-            <div className="h-10 w-[1px] bg-[#23382d] hidden sm:block" />
+            <div className="h-7 w-[1px] bg-[#23382d] hidden sm:block" />
 
-            <div>
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
               <h1
-                className={`font-bold uppercase tracking-tight text-[#f1f7f4] leading-tight ${
-                  tvMode ? "text-xl sm:text-2xl 2xl:text-3xl" : "text-base sm:text-xl"
+                className={`font-bold uppercase tracking-tight text-[#f1f7f4] leading-none ${
+                  tvMode ? "text-lg sm:text-xl 2xl:text-2xl" : "text-sm sm:text-base"
                 }`}
               >
                 CONTROLE GERAL DE COMPRAS E PROCESSOS
               </h1>
-              <div className="text-xs text-[#a2c682] font-medium mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 tabular-nums">
-                <span>FASE INTERNA (6 ETAPAS) E FASE EXTERNA (18 ETAPAS)</span>
-                <span className="text-[#345243]">•</span>
-                <span className="text-[#b4c9be]">ATUALIZAÇÃO EM SEGUNDO PLANO A CADA 30 SEGUNDOS</span>
-              </div>
+              <span className="text-[11px] text-[#a2c682] font-medium hidden xl:inline tabular-nums">
+                • FASE INTERNA (6 ETAPAS) E FASE EXTERNA (18 ETAPAS)
+              </span>
             </div>
           </div>
 
           {/* Action Controls */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
             {tvMode && (
               <div className="flex items-center border border-[#345243] bg-[#0d1612]">
                 <button
                   type="button"
                   onClick={() => setTvAutoRotate((r) => !r)}
-                  className="px-3 py-1.5 text-xs font-semibold text-[#a2c682] hover:bg-[#17261f] flex items-center gap-1.5 border-r border-[#345243] cursor-pointer"
+                  className="px-2.5 py-1 text-xs font-semibold text-[#a2c682] hover:bg-[#17261f] flex items-center gap-1.5 border-r border-[#345243] cursor-pointer"
                   title="Alternar rotação automática de páginas na TV"
                 >
-                  {tvAutoRotate ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-                  <span>{tvAutoRotate ? "ROTAÇÃO ATIVA (12s)" : "ROTAÇÃO PAUSADA"}</span>
+                  {tvAutoRotate ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+                  <span>{tvAutoRotate ? "ROTAÇÃO (12s)" : "PAUSADO"}</span>
                 </button>
                 <select
                   value={tvPageSize}
@@ -287,15 +293,15 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
                     setTvCurrentPage(0);
                   }}
                   aria-label="Linhas por página no Modo TV"
-                  className="px-2.5 py-1.5 text-xs font-semibold text-[#f1f7f4] bg-[#111c17] focus:outline-none cursor-pointer"
+                  className="px-2 py-1 text-xs font-semibold text-[#f1f7f4] bg-[#111c17] focus:outline-none cursor-pointer"
                 >
-                  <option value={8}>8 processos / tela</option>
-                  <option value={10}>10 processos / tela</option>
-                  <option value={15}>15 processos / tela</option>
-                  <option value={30}>Todos (30 processos)</option>
+                  <option value={12}>12 / tela</option>
+                  <option value={15}>15 / tela</option>
+                  <option value={20}>20 / tela</option>
+                  <option value={30}>Todos (30)</option>
                 </select>
                 {totalTvPages > 1 && (
-                  <div className="px-2.5 py-1.5 text-xs font-bold text-[#a2c682] border-l border-[#345243] tabular-nums bg-[#111c17]">
+                  <div className="px-2 py-1 text-xs font-bold text-[#a2c682] border-l border-[#345243] tabular-nums bg-[#111c17]">
                     PÁG. {(tvCurrentPage % totalTvPages) + 1}/{totalTvPages}
                   </div>
                 )}
@@ -306,26 +312,26 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
               type="button"
               onClick={fetchLatestData}
               disabled={isRefreshing}
-              className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wide border border-[#345243] bg-[#17261f] text-[#f1f7f4] hover:bg-[#1f3329] active:bg-[#274034] flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
+              className="px-2.5 py-1 text-xs font-semibold uppercase tracking-wide border border-[#345243] bg-[#17261f] text-[#f1f7f4] hover:bg-[#1f3329] active:bg-[#274034] flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
             >
-              <RefreshCw className={`w-3.5 h-3.5 text-[#a2c682] ${isRefreshing ? "animate-spin" : ""}`} />
-              <span>{isRefreshing ? "Sincronizando" : "Atualizar Agora"}</span>
+              <RefreshCw className={`w-3 h-3 text-[#a2c682] ${isRefreshing ? "animate-spin" : ""}`} />
+              <span>{isRefreshing ? "Sincronizando" : "Atualizar"}</span>
             </button>
 
             <a
               href={data.sheetUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wide border border-[#345243] bg-[#17261f] text-[#f1f7f4] hover:bg-[#1f3329] flex items-center gap-1.5"
+              className="px-2.5 py-1 text-xs font-semibold uppercase tracking-wide border border-[#345243] bg-[#17261f] text-[#f1f7f4] hover:bg-[#1f3329] flex items-center gap-1.5"
             >
-              <span>Planilha Fonte</span>
-              <ExternalLink className="w-3.5 h-3.5 text-[#a2c682]" />
+              <span>Planilha</span>
+              <ExternalLink className="w-3 h-3 text-[#a2c682]" />
             </a>
 
             <button
               type="button"
               onClick={toggleTvMode}
-              className={`px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide flex items-center gap-1.5 border cursor-pointer ${
+              className={`px-3 py-1 text-xs font-bold uppercase tracking-wide flex items-center gap-1.5 border cursor-pointer ${
                 tvMode
                   ? "bg-[#b91c1c] border-[#ef4444] text-white hover:bg-[#991b1b]"
                   : "bg-[#2f7958] border-[#3da174] text-white hover:bg-[#236145]"
@@ -333,12 +339,12 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
             >
               {tvMode ? (
                 <>
-                  <Minimize2 className="w-3.5 h-3.5" />
-                  <span>Sair do Modo TV</span>
+                  <Minimize2 className="w-3 h-3" />
+                  <span>Sair TV</span>
                 </>
               ) : (
                 <>
-                  <Tv className="w-3.5 h-3.5" />
+                  <Tv className="w-3 h-3" />
                   <span>Modo TV</span>
                 </>
               )}
@@ -347,37 +353,34 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
         </div>
       </header>
 
-      {/* MAIN WORKSPACE CONTAINER */}
-      <main className="flex-1 max-w-[2400px] w-full mx-auto px-3 sm:px-6 py-4 space-y-4">
-        {/* KPI STRIP - SHARP RECTANGULAR DARK INSTITUTIONAL METRICS */}
+      {/* MAIN WORKSPACE CONTAINER - COMPACT SPACING TO MAXIMIZE TABLE ROWS */}
+      <main className="flex-1 max-w-[2400px] w-full mx-auto px-3 sm:px-5 py-2.5 space-y-2.5">
+        {/* COMPACT KPI STRIP (SINGLE-ROW HIGH-DENSITY METRICS) */}
         <section
           aria-label="Indicadores Gerais"
-          className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 bg-[#111c17] border border-[#23382d]"
+          className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 bg-[#111c17] border border-[#23382d]"
         >
           {/* KPI 1: Total */}
           <button
             type="button"
             onClick={clearAllFilters}
-            className={`text-left p-3 sm:p-4 border-b xl:border-b-0 border-r border-[#23382d] border-t-4 transition-colors cursor-pointer ${
+            className={`text-left px-3 py-1.5 border-b xl:border-b-0 border-r border-[#23382d] border-l-4 transition-colors cursor-pointer flex items-center justify-between gap-2 ${
               !hasActiveFilters
-                ? "border-t-[#a2c682] bg-[#17261f]"
-                : "border-t-transparent hover:bg-[#17261f]"
+                ? "border-l-[#a2c682] bg-[#17261f]"
+                : "border-l-transparent hover:bg-[#17261f]"
             }`}
           >
-            <div className="text-[11px] font-bold uppercase tracking-wider text-[#b4c9be]">
-              TOTAL DE PROCESSOS
+            <div className="min-w-0">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-[#b4c9be] truncate">
+                TOTAL DE PROCESSOS
+              </div>
+              <div className="text-[10px] text-[#7d998a] truncate tabular-nums">
+                Avanço médio: <strong className="text-[#a2c682]">{data.resumo.progressoMedioGeral}%</strong>
+              </div>
             </div>
-            <div className="mt-1 flex items-baseline justify-between tabular-nums">
-              <span className={`font-bold text-[#f1f7f4] ${tvMode ? "text-3xl 2xl:text-4xl" : "text-2xl sm:text-3xl"}`}>
-                {data.totalProcessos}
-              </span>
-              <span className="text-xs font-semibold text-[#a2c682]">
-                Média {data.resumo.progressoMedioGeral}%
-              </span>
-            </div>
-            <div className="mt-1.5 text-[11px] text-[#7d998a] tabular-nums">
-              100% da carteira ativa
-            </div>
+            <span className="text-xl sm:text-2xl font-bold text-[#f1f7f4] tabular-nums shrink-0">
+              {data.totalProcessos}
+            </span>
           </button>
 
           {/* KPI 2: Fase Interna */}
@@ -387,26 +390,23 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
               clearAllFilters();
               setSelectedFase(selectedFase === "FASE_INTERNA" ? "TODAS" : "FASE_INTERNA");
             }}
-            className={`text-left p-3 sm:p-4 border-b xl:border-b-0 border-r border-[#23382d] border-t-4 transition-colors cursor-pointer ${
+            className={`text-left px-3 py-1.5 border-b xl:border-b-0 border-r border-[#23382d] border-l-4 transition-colors cursor-pointer flex items-center justify-between gap-2 ${
               selectedFase === "FASE_INTERNA"
-                ? "border-t-[#a2c682] bg-[#17261f]"
-                : "border-t-transparent hover:bg-[#17261f]"
+                ? "border-l-[#a2c682] bg-[#17261f]"
+                : "border-l-transparent hover:bg-[#17261f]"
             }`}
           >
-            <div className="text-[11px] font-bold uppercase tracking-wider text-[#b4c9be]">
-              EM FASE INTERNA
+            <div className="min-w-0">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-[#b4c9be] truncate">
+                FASE INTERNA
+              </div>
+              <div className="text-[10px] text-[#7d998a] truncate tabular-nums">
+                {Math.round((data.resumo.faseInterna / Math.max(1, data.totalProcessos)) * 100)}% • DFD a Presid.
+              </div>
             </div>
-            <div className="mt-1 flex items-baseline justify-between tabular-nums">
-              <span className={`font-bold text-[#f1f7f4] ${tvMode ? "text-3xl 2xl:text-4xl" : "text-2xl sm:text-3xl"}`}>
-                {data.resumo.faseInterna}
-              </span>
-              <span className="text-xs font-semibold text-[#b4c9be]">
-                {Math.round((data.resumo.faseInterna / Math.max(1, data.totalProcessos)) * 100)}%
-              </span>
-            </div>
-            <div className="mt-1.5 text-[11px] text-[#7d998a]">
-              Instrução (DFD a Presidente)
-            </div>
+            <span className="text-xl sm:text-2xl font-bold text-[#f1f7f4] tabular-nums shrink-0">
+              {data.resumo.faseInterna}
+            </span>
           </button>
 
           {/* KPI 3: Fase Externa */}
@@ -416,26 +416,23 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
               clearAllFilters();
               setSelectedFase(selectedFase === "FASE_EXTERNA" ? "TODAS" : "FASE_EXTERNA");
             }}
-            className={`text-left p-3 sm:p-4 border-b md:border-b-0 xl:border-b-0 border-r border-[#23382d] border-t-4 transition-colors cursor-pointer ${
+            className={`text-left px-3 py-1.5 border-b sm:border-b-0 border-r border-[#23382d] border-l-4 transition-colors cursor-pointer flex items-center justify-between gap-2 ${
               selectedFase === "FASE_EXTERNA"
-                ? "border-t-[#3da174] bg-[#17261f]"
-                : "border-t-transparent hover:bg-[#17261f]"
+                ? "border-l-[#3da174] bg-[#17261f]"
+                : "border-l-transparent hover:bg-[#17261f]"
             }`}
           >
-            <div className="text-[11px] font-bold uppercase tracking-wider text-[#b4c9be]">
-              EM FASE EXTERNA
+            <div className="min-w-0">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-[#b4c9be] truncate">
+                FASE EXTERNA
+              </div>
+              <div className="text-[10px] text-[#7d998a] truncate tabular-nums">
+                {Math.round((data.resumo.faseExterna / Math.max(1, data.totalProcessos)) * 100)}% • Cotação a Arq.
+              </div>
             </div>
-            <div className="mt-1 flex items-baseline justify-between tabular-nums">
-              <span className={`font-bold text-[#a2c682] ${tvMode ? "text-3xl 2xl:text-4xl" : "text-2xl sm:text-3xl"}`}>
-                {data.resumo.faseExterna}
-              </span>
-              <span className="text-xs font-semibold text-[#3da174]">
-                {Math.round((data.resumo.faseExterna / Math.max(1, data.totalProcessos)) * 100)}%
-              </span>
-            </div>
-            <div className="mt-1.5 text-[11px] text-[#7d998a]">
-              Cotação, licitação e execução
-            </div>
+            <span className="text-xl sm:text-2xl font-bold text-[#a2c682] tabular-nums shrink-0">
+              {data.resumo.faseExterna}
+            </span>
           </button>
 
           {/* KPI 4: Empenho e Execução */}
@@ -447,26 +444,23 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
                 selectedEstagio === "EMPENHO_E_EXECUCAO" ? "TODOS" : "EMPENHO_E_EXECUCAO"
               );
             }}
-            className={`text-left p-3 sm:p-4 border-b md:border-b-0 border-r border-[#23382d] border-t-4 transition-colors cursor-pointer ${
+            className={`text-left px-3 py-1.5 border-b sm:border-b-0 border-r border-[#23382d] border-l-4 transition-colors cursor-pointer flex items-center justify-between gap-2 ${
               selectedEstagio === "EMPENHO_E_EXECUCAO"
-                ? "border-t-[#3da174] bg-[#17261f]"
-                : "border-t-transparent hover:bg-[#17261f]"
+                ? "border-l-[#3da174] bg-[#17261f]"
+                : "border-l-transparent hover:bg-[#17261f]"
             }`}
           >
-            <div className="text-[11px] font-bold uppercase tracking-wider text-[#b4c9be]">
-              EM EMPENHO / COMPRA
+            <div className="min-w-0">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-[#b4c9be] truncate">
+                EMPENHO / COMPRA
+              </div>
+              <div className="text-[10px] text-[#7d998a] truncate">
+                Empenho, AF/OS e TCN
+              </div>
             </div>
-            <div className="mt-1 flex items-baseline justify-between tabular-nums">
-              <span className={`font-bold text-[#f1f7f4] ${tvMode ? "text-3xl 2xl:text-4xl" : "text-2xl sm:text-3xl"}`}>
-                {data.resumo.emEmpenhoExecucao}
-              </span>
-              <span className="text-xs font-semibold text-[#b4c9be]">
-                Etapas 16 a 21
-              </span>
-            </div>
-            <div className="mt-1.5 text-[11px] text-[#7d998a]">
-              Empenho, AF/OS, TCN e Publicação
-            </div>
+            <span className="text-xl sm:text-2xl font-bold text-[#f1f7f4] tabular-nums shrink-0">
+              {data.resumo.emEmpenhoExecucao}
+            </span>
           </button>
 
           {/* KPI 5: Almoxarifado / Patrimônio */}
@@ -478,26 +472,23 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
                 selectedEstagio === "ENTREGA_E_ENCERRAMENTO" ? "TODOS" : "ENTREGA_E_ENCERRAMENTO"
               );
             }}
-            className={`text-left p-3 sm:p-4 border-r border-[#23382d] border-t-4 transition-colors cursor-pointer ${
+            className={`text-left px-3 py-1.5 border-r border-[#23382d] border-l-4 transition-colors cursor-pointer flex items-center justify-between gap-2 ${
               selectedEstagio === "ENTREGA_E_ENCERRAMENTO"
-                ? "border-t-[#a2c682] bg-[#17261f]"
-                : "border-t-transparent hover:bg-[#17261f]"
+                ? "border-l-[#a2c682] bg-[#17261f]"
+                : "border-l-transparent hover:bg-[#17261f]"
             }`}
           >
-            <div className="text-[11px] font-bold uppercase tracking-wider text-[#b4c9be]">
-              ENTREGA / PATRIMÔNIO
+            <div className="min-w-0">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-[#b4c9be] truncate">
+                ENTREGA / PATRIMÔNIO
+              </div>
+              <div className="text-[10px] text-[#7d998a] truncate">
+                Etapas finais (22 a 24)
+              </div>
             </div>
-            <div className="mt-1 flex items-baseline justify-between tabular-nums">
-              <span className={`font-bold text-[#3da174] ${tvMode ? "text-3xl 2xl:text-4xl" : "text-2xl sm:text-3xl"}`}>
-                {data.resumo.emEntregaEncerramento}
-              </span>
-              <span className="text-xs font-semibold text-[#a2c682]">
-                Etapas 22 a 24
-              </span>
-            </div>
-            <div className="mt-1.5 text-[11px] text-[#7d998a]">
-              Almoxarifado, patrimônio e arquivo
-            </div>
+            <span className="text-xl sm:text-2xl font-bold text-[#3da174] tabular-nums shrink-0">
+              {data.resumo.emEntregaEncerramento}
+            </span>
           </button>
 
           {/* KPI 6: Com Pendência (Refazer) */}
@@ -507,49 +498,39 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
               clearAllFilters();
               setOnlyPendencias(!onlyPendencias);
             }}
-            className={`text-left p-3 sm:p-4 border-t-4 transition-colors cursor-pointer ${
+            className={`text-left px-3 py-1.5 border-l-4 transition-colors cursor-pointer flex items-center justify-between gap-2 ${
               onlyPendencias
-                ? "border-t-[#ef4444] bg-[#2b1114]"
+                ? "border-l-[#ef4444] bg-[#2b1114]"
                 : data.resumo.comPendencia > 0
-                ? "border-t-[#ef4444] bg-[#1f1013] hover:bg-[#2b1114]"
-                : "border-t-transparent hover:bg-[#17261f]"
+                ? "border-l-[#ef4444] bg-[#1f1013] hover:bg-[#2b1114]"
+                : "border-l-transparent hover:bg-[#17261f]"
             }`}
           >
-            <div className="text-[11px] font-bold uppercase tracking-wider text-[#f87171] flex items-center justify-between">
-              <span>AÇÃO REQUERIDA (REFAZER)</span>
-              {data.resumo.comPendencia > 0 && <AlertTriangle className="w-3.5 h-3.5 text-[#ef4444]" />}
+            <div className="min-w-0">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-[#f87171] flex items-center gap-1 truncate">
+                <span>REFAZER / PENDÊNCIA</span>
+                {data.resumo.comPendencia > 0 && <AlertTriangle className="w-3 h-3 text-[#ef4444] shrink-0" />}
+              </div>
+              <div className="text-[10px] text-[#fca5a5] truncate">
+                {data.resumo.comPendencia > 0 ? "Proc. 1043/2026" : "Sem pendências"}
+              </div>
             </div>
-            <div className="mt-1 flex items-baseline justify-between tabular-nums">
-              <span className={`font-bold text-[#f87171] ${tvMode ? "text-3xl 2xl:text-4xl" : "text-2xl sm:text-3xl"}`}>
-                {data.resumo.comPendencia}
-              </span>
-              <span className="text-xs font-bold text-[#fca5a5]">
-                {data.resumo.comPendencia > 0 ? "Revisão imediata" : "Sem pendências"}
-              </span>
-            </div>
-            <div className="mt-1.5 text-[11px] text-[#fca5a5] truncate">
-              {data.resumo.comPendencia > 0
-                ? "Proc. 1043/2026 (Conformidade / Pesq.)"
-                : "Nenhuma etapa com ressalva"}
-            </div>
+            <span className="text-xl sm:text-2xl font-bold text-[#f87171] tabular-nums shrink-0">
+              {data.resumo.comPendencia}
+            </span>
           </button>
         </section>
 
-        {/* ANALYTICAL PANELS - 3 SOBER DARK INSTITUTIONAL BLOCKS */}
-        <section className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          {/* PANEL 1: DISTRIBUIÇÃO POR ESTÁGIO DO FLUXO (5 COLS) */}
+        {/* COMPACT ANALYTICAL STRIP: DISTRIBUIÇÃO, PROCESSOS POR AGENTE & MODALIDADES */}
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-2.5">
+          {/* COMPACT CARD 1: DISTRIBUIÇÃO POR ESTÁGIO OPERACIONAL (5 COLS) */}
           <div className="lg:col-span-5 bg-[#111c17] border border-[#23382d] flex flex-col">
-            <div className="px-4 py-2.5 bg-[#16241d] border-b border-[#23382d] flex items-center justify-between">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-[#a2c682]">
-                DISTRIBUIÇÃO POR ESTÁGIO OPERACIONAL
+            <div className="px-3 py-1 bg-[#16241d] border-b border-[#23382d] flex items-center justify-between gap-3">
+              <h2 className="text-[10px] font-bold uppercase tracking-wider text-[#a2c682] shrink-0">
+                DISTRIBUIÇÃO POR ESTÁGIO
               </h2>
-              <span className="text-[11px] font-semibold text-[#7d998a] tabular-nums">
-                24 ETAPAS DO FLUXO
-              </span>
-            </div>
-            <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
-              {/* Segmented Macro Bar */}
-              <div className="w-full h-3.5 flex bg-[#0a110e] border border-[#23382d] overflow-hidden">
+              {/* Inline Segmented Progress Bar */}
+              <div className="flex-1 max-w-[200px] h-2 flex bg-[#0a110e] border border-[#23382d] overflow-hidden">
                 {data.porEstagio.map((st, idx) => {
                   const colors = [
                     "bg-[#658b61]",
@@ -569,225 +550,154 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
                   );
                 })}
               </div>
-
-              {/* Stage Table */}
-              <div className="divide-y divide-[#1d3027]">
-                {data.porEstagio.map((st, idx) => {
-                  const isSelected = selectedEstagio === st.id;
-                  const indicatorColors = [
-                    "bg-[#658b61]",
-                    "bg-[#3da174]",
-                    "bg-[#2f7958]",
-                    "bg-[#1e5c40]",
-                    "bg-[#a2c682]",
-                  ];
-                  return (
-                    <button
-                      key={st.id}
-                      type="button"
-                      onClick={() =>
-                        setSelectedEstagio(selectedEstagio === st.id ? "TODOS" : st.id)
-                      }
-                      className={`w-full py-1.5 px-2 flex items-center justify-between text-left hover:bg-[#17261f] transition-colors cursor-pointer ${
-                        isSelected ? "bg-[#1d3328] font-semibold text-[#a2c682]" : ""
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <span className={`w-2.5 h-2.5 shrink-0 ${indicatorColors[idx % indicatorColors.length]}`} />
-                        <span className="text-xs text-[#f1f7f4] truncate">{st.label}</span>
-                        <span className="text-[10px] uppercase tracking-wider text-[#b4c9be] border border-[#345243] bg-[#0d1612] px-1">
-                          {st.fase}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3 shrink-0 tabular-nums">
-                        <span className="text-xs font-bold text-[#f1f7f4] w-6 text-right">
-                          {st.count}
-                        </span>
-                        <span className="text-[11px] text-[#7d998a] w-9 text-right">
-                          {st.percent}%
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+            </div>
+            <div className="p-1.5 grid grid-cols-2 sm:grid-cols-5 gap-1 flex-1">
+              {data.porEstagio.map((st, idx) => {
+                const isSelected = selectedEstagio === st.id;
+                const indicatorColors = [
+                  "bg-[#658b61]",
+                  "bg-[#3da174]",
+                  "bg-[#2f7958]",
+                  "bg-[#1e5c40]",
+                  "bg-[#a2c682]",
+                ];
+                return (
+                  <button
+                    key={st.id}
+                    type="button"
+                    onClick={() =>
+                      setSelectedEstagio(selectedEstagio === st.id ? "TODOS" : st.id)
+                    }
+                    title={`${st.label} (${st.fase}): ${st.count} processos (${st.percent}%)`}
+                    className={`px-2 py-1 text-left border transition-colors cursor-pointer flex flex-col justify-between ${
+                      isSelected
+                        ? "bg-[#1d3328] border-[#a2c682]"
+                        : "bg-[#0d1612] border-[#1d3027] hover:bg-[#17261f]"
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className={`w-2 h-2 shrink-0 ${indicatorColors[idx % indicatorColors.length]}`} />
+                      <span className="text-[10px] font-medium text-[#b4c9be] truncate">
+                        {SHORT_STAGE_LABELS[st.id]}
+                      </span>
+                    </div>
+                    <div className="flex items-baseline justify-between gap-1 mt-0.5 tabular-nums">
+                      <span className="text-sm font-bold text-[#f1f7f4]">{st.count}</span>
+                      <span className="text-[10px] text-[#7d998a]">{st.percent}%</span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* PANEL 2: CARGA POR AGENTE DE CONTRATAÇÃO (4 COLS) */}
+          {/* COMPACT CARD 2: PROCESSOS POR AGENTE DE CONTRATAÇÃO (4 COLS) */}
           <div className="lg:col-span-4 bg-[#111c17] border border-[#23382d] flex flex-col">
-            <div className="px-4 py-2.5 bg-[#16241d] border-b border-[#23382d] flex items-center justify-between">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-[#a2c682]">
-                PROCESSOS POR AGENTE DE CONTRATAÇÃO
+            <div className="px-3 py-1 bg-[#16241d] border-b border-[#23382d] flex items-center justify-between">
+              <h2 className="text-[10px] font-bold uppercase tracking-wider text-[#a2c682]">
+                PROCESSOS POR AGENTE
               </h2>
-              <span className="text-[11px] font-semibold text-[#7d998a]">
-                RESPONSABILIDADE
+              <span className="text-[10px] text-[#7d998a] tabular-nums">
+                Int. / Ext. / Avanço
               </span>
             </div>
-            <div className="p-4 flex-1 flex flex-col justify-between">
-              <table className="w-full text-xs border-collapse tabular-nums">
-                <thead>
-                  <tr className="border-b border-[#23382d] text-[#7d998a] text-[11px] uppercase">
-                    <th className="py-1.5 text-left font-semibold">Agente</th>
-                    <th className="py-1.5 text-right font-semibold">Total</th>
-                    <th className="py-1.5 text-right font-semibold">Int.</th>
-                    <th className="py-1.5 text-right font-semibold">Ext.</th>
-                    <th className="py-1.5 text-right font-semibold">Avanço</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#1d3027]">
-                  {data.porAgente.map((ag) => {
-                    const isSelected = selectedAgente === ag.agente;
-                    const share = Math.round((ag.total / Math.max(1, data.totalProcessos)) * 100);
-                    return (
-                      <tr
-                        key={ag.agente}
-                        onClick={() =>
-                          setSelectedAgente(selectedAgente === ag.agente ? "TODOS" : ag.agente)
-                        }
-                        className={`hover:bg-[#17261f] cursor-pointer transition-colors ${
-                          isSelected ? "bg-[#1d3328] font-semibold" : ""
-                        }`}
-                      >
-                        <td className="py-2.5 pr-2">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-[#f1f7f4]">{ag.agente}</span>
-                            {ag.comPendencia > 0 && (
-                              <span
-                                className="text-[10px] font-bold text-white bg-[#b91c1c] border border-[#ef4444] px-1 uppercase"
-                                title="Possui processo com etapa marcada como REFAZER"
-                              >
-                                {ag.comPendencia} Refazer
-                              </span>
-                            )}
-                          </div>
-                          <div className="w-full h-1.5 bg-[#0a110e] mt-1">
-                            <div
-                              className="h-full bg-[#3da174]"
-                              style={{ width: `${share}%` }}
-                            />
-                          </div>
-                        </td>
-                        <td className="py-2.5 px-2 text-right font-bold text-[#f1f7f4] align-top">
-                          {ag.total}
-                        </td>
-                        <td className="py-2.5 px-2 text-right text-[#b4c9be] align-top">
-                          {ag.faseInterna}
-                        </td>
-                        <td className="py-2.5 px-2 text-right text-[#3da174] font-semibold align-top">
-                          {ag.faseExterna}
-                        </td>
-                        <td className="py-2.5 pl-2 text-right font-bold text-[#a2c682] align-top">
-                          {ag.progressoMedio}%
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-
-              <div className="mt-3 pt-2.5 border-t border-[#1d3027] flex items-center justify-between text-[11px] text-[#7d998a]">
-                <span>Clique em um agente para filtrar a matriz</span>
-                <span className="tabular-nums font-semibold text-[#b4c9be]">
-                  Total: {data.totalProcessos} processos
-                </span>
-              </div>
+            <div className="p-1.5 grid grid-cols-3 gap-1.5 flex-1">
+              {data.porAgente.map((ag) => {
+                const isSelected = selectedAgente === ag.agente;
+                return (
+                  <button
+                    key={ag.agente}
+                    type="button"
+                    onClick={() =>
+                      setSelectedAgente(selectedAgente === ag.agente ? "TODOS" : ag.agente)
+                    }
+                    className={`px-2.5 py-1 text-left border transition-colors cursor-pointer flex flex-col justify-between tabular-nums ${
+                      isSelected
+                        ? "bg-[#1d3328] border-[#a2c682]"
+                        : "bg-[#0d1612] border-[#1d3027] hover:bg-[#17261f]"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-1">
+                      <div className="flex items-center gap-1 min-w-0">
+                        <span className="text-xs font-bold text-[#f1f7f4] truncate">
+                          {ag.agente}
+                        </span>
+                        {ag.comPendencia > 0 && (
+                          <span
+                            className="w-2 h-2 bg-[#ef4444] shrink-0"
+                            title={`${ag.comPendencia} processo(s) com REFAZER`}
+                          />
+                        )}
+                      </div>
+                      <span className="text-sm font-bold text-[#a2c682] shrink-0">
+                        {ag.total}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-[10px] text-[#7d998a] mt-0.5">
+                      <span>
+                        I:<strong className="text-[#b4c9be]">{ag.faseInterna}</strong> E:
+                        <strong className="text-[#3da174]">{ag.faseExterna}</strong>
+                      </span>
+                      <span className="font-semibold text-[#f1f7f4]">{ag.progressoMedio}%</span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* PANEL 3: MODALIDADES & ETAPAS AGUARDANDO AÇÃO (3 COLS) */}
+          {/* COMPACT CARD 3: MODALIDADES E RETENÇÕES (3 COLS) */}
           <div className="lg:col-span-3 bg-[#111c17] border border-[#23382d] flex flex-col">
-            <div className="px-4 py-2.5 bg-[#16241d] border-b border-[#23382d] flex items-center justify-between">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-[#a2c682]">
-                MODALIDADES E RETENÇÕES
+            <div className="px-3 py-1 bg-[#16241d] border-b border-[#23382d] flex items-center justify-between">
+              <h2 className="text-[10px] font-bold uppercase tracking-wider text-[#a2c682]">
+                MODALIDADES
               </h2>
-              <span className="text-[11px] font-semibold text-[#7d998a]">
-                FILTRO RÁPIDO
-              </span>
+              <span className="text-[10px] text-[#7d998a]">FILTRO RÁPIDO</span>
             </div>
-            <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
-              {/* Modalidades */}
-              <div>
-                <div className="text-[10px] font-bold uppercase tracking-wider text-[#7d998a] mb-1.5">
-                  POR MODALIDADE / TIPO
-                </div>
-                <div className="divide-y divide-[#1d3027] border border-[#23382d]">
-                  {data.porModalidade.map((m) => {
-                    const isSelected = selectedModalidade === m.modalidade;
-                    return (
-                      <button
-                        key={m.modalidade}
-                        type="button"
-                        onClick={() =>
-                          setSelectedModalidade(
-                            selectedModalidade === m.modalidade ? "TODAS" : m.modalidade
-                          )
-                        }
-                        className={`w-full px-2.5 py-1.5 flex items-center justify-between text-xs hover:bg-[#17261f] cursor-pointer ${
-                          isSelected ? "bg-[#1d3328] font-bold text-[#a2c682]" : "text-[#f1f7f4]"
-                        }`}
-                      >
-                        <span className="truncate">{m.modalidade}</span>
-                        <span className="font-bold tabular-nums ml-2 text-[#a2c682]">{m.total}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Etapas com processos aguardando */}
-              <div>
-                <div className="text-[10px] font-bold uppercase tracking-wider text-[#7d998a] mb-1.5">
-                  PRINCIPAIS ETAPAS AGUARDANDO AÇÃO
-                </div>
-                <div className="divide-y divide-[#1d3027] border border-[#23382d]">
-                  {data.gargalosEtapas.slice(0, 4).map((g) => {
-                    const isSelected = selectedEtapaParada === g.label;
-                    return (
-                      <button
-                        key={g.label}
-                        type="button"
-                        onClick={() =>
-                          setSelectedEtapaParada(
-                            selectedEtapaParada === g.label ? "TODAS" : g.label
-                          )
-                        }
-                        className={`w-full px-2.5 py-1.5 flex items-center justify-between text-xs hover:bg-[#17261f] cursor-pointer ${
-                          isSelected ? "bg-[#1d3328] font-bold" : ""
-                        }`}
-                      >
-                        <span className="truncate text-left text-[#f1f7f4]">{g.label}</span>
-                        <div className="flex items-center gap-1.5 shrink-0 tabular-nums">
-                          {g.refazerCount > 0 && (
-                            <span className="px-1 bg-[#b91c1c] text-white text-[10px] font-bold">
-                              {g.refazerCount} REFAZER
-                            </span>
-                          )}
-                          {g.paradosCount > 0 && (
-                            <span className="px-1 bg-[#1d3027] text-[#b4c9be] text-[10px] font-semibold">
-                              {g.paradosCount} aguard.
-                            </span>
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+            <div className="p-1.5 grid grid-cols-2 sm:grid-cols-3 gap-1 flex-1 content-center">
+              {data.porModalidade.map((m) => {
+                const isSelected = selectedModalidade === m.modalidade;
+                const shortMod =
+                  m.modalidade === "Compra Direta / Dispensa"
+                    ? "Dispensa / Direta"
+                    : m.modalidade === "Pregão Eletrônico"
+                    ? "Pregão Eletr."
+                    : m.modalidade;
+                return (
+                  <button
+                    key={m.modalidade}
+                    type="button"
+                    onClick={() =>
+                      setSelectedModalidade(
+                        selectedModalidade === m.modalidade ? "TODAS" : m.modalidade
+                      )
+                    }
+                    title={m.modalidade}
+                    className={`px-2 py-1 border text-[11px] flex items-center justify-between gap-1 cursor-pointer transition-colors tabular-nums ${
+                      isSelected
+                        ? "bg-[#1d3328] border-[#a2c682] font-bold text-[#a2c682]"
+                        : "bg-[#0d1612] border-[#1d3027] text-[#f1f7f4] hover:bg-[#17261f]"
+                    }`}
+                  >
+                    <span className="truncate text-[10px]">{shortMod}</span>
+                    <span className="font-bold text-[#a2c682] shrink-0">{m.total}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </section>
 
-        {/* FILTER & CONTROL BAR */}
+        {/* COMPACT FILTER & CONTROL BAR */}
         {(!tvMode || hasActiveFilters) && (
           <section
             aria-label="Controles de Pesquisa e Filtro"
-            className="bg-[#111c17] border border-[#23382d] p-3 flex flex-col xl:flex-row xl:items-center justify-between gap-3"
+            className="bg-[#111c17] border border-[#23382d] px-2.5 py-1.5 flex flex-col xl:flex-row xl:items-center justify-between gap-2"
           >
-            <div className="flex flex-1 flex-wrap items-center gap-2">
+            <div className="flex flex-1 flex-wrap items-center gap-1.5">
               {/* Search Box */}
-              <div className="relative flex-1 min-w-[220px] max-w-md">
-                <Search className="w-4 h-4 text-[#7d998a] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <div className="relative flex-1 min-w-[200px] max-w-sm">
+                <Search className="w-3.5 h-3.5 text-[#7d998a] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="text"
                   value={searchQuery}
@@ -795,8 +705,8 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
                     setSearchQuery(e.target.value);
                     setTvCurrentPage(0);
                   }}
-                  placeholder="Pesquisar processo (ex: 1058/2026) ou objeto..."
-                  className="w-full pl-8 pr-7 py-1.5 text-xs bg-[#0a110e] border border-[#345243] text-[#f1f7f4] placeholder-[#7d998a] focus:outline-none focus:border-[#a2c682]"
+                  placeholder="Buscar processo (ex: 1058/2026) ou objeto..."
+                  className="w-full pl-7 pr-6 py-1 text-xs bg-[#0a110e] border border-[#345243] text-[#f1f7f4] placeholder-[#7d998a] focus:outline-none focus:border-[#a2c682]"
                 />
                 {searchQuery && (
                   <button
@@ -805,7 +715,7 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-[#7d998a] hover:text-[#f1f7f4] cursor-pointer"
                     aria-label="Limpar busca"
                   >
-                    <X className="w-3.5 h-3.5" />
+                    <X className="w-3 h-3" />
                   </button>
                 )}
               </div>
@@ -818,7 +728,7 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
                   setTvCurrentPage(0);
                 }}
                 aria-label="Filtrar por Fase"
-                className="px-2.5 py-1.5 text-xs bg-[#0a110e] border border-[#345243] text-[#f1f7f4] font-medium focus:outline-none focus:border-[#a2c682] cursor-pointer"
+                className="px-2 py-1 text-xs bg-[#0a110e] border border-[#345243] text-[#f1f7f4] font-medium focus:outline-none focus:border-[#a2c682] cursor-pointer"
               >
                 <option value="TODAS">Fase: Todas ({data.totalProcessos})</option>
                 <option value="FASE_INTERNA">Fase Interna ({data.resumo.faseInterna})</option>
@@ -833,7 +743,7 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
                   setTvCurrentPage(0);
                 }}
                 aria-label="Filtrar por Agente de Contratação"
-                className="px-2.5 py-1.5 text-xs bg-[#0a110e] border border-[#345243] text-[#f1f7f4] font-medium focus:outline-none focus:border-[#a2c682] cursor-pointer"
+                className="px-2 py-1 text-xs bg-[#0a110e] border border-[#345243] text-[#f1f7f4] font-medium focus:outline-none focus:border-[#a2c682] cursor-pointer"
               >
                 <option value="TODOS">Agente: Todos</option>
                 {data.porAgente.map((ag) => (
@@ -851,7 +761,7 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
                   setTvCurrentPage(0);
                 }}
                 aria-label="Filtrar por Modalidade"
-                className="px-2.5 py-1.5 text-xs bg-[#0a110e] border border-[#345243] text-[#f1f7f4] font-medium focus:outline-none focus:border-[#a2c682] cursor-pointer"
+                className="px-2 py-1 text-xs bg-[#0a110e] border border-[#345243] text-[#f1f7f4] font-medium focus:outline-none focus:border-[#a2c682] cursor-pointer"
               >
                 <option value="TODAS">Modalidade: Todas</option>
                 {data.porModalidade.map((m) => (
@@ -866,41 +776,41 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
                 aria-label="Ordenar processos"
-                className="px-2.5 py-1.5 text-xs bg-[#0a110e] border border-[#345243] text-[#f1f7f4] font-medium focus:outline-none focus:border-[#a2c682] cursor-pointer"
+                className="px-2 py-1 text-xs bg-[#0a110e] border border-[#345243] text-[#f1f7f4] font-medium focus:outline-none focus:border-[#a2c682] cursor-pointer"
               >
-                <option value="ORDEM">Ordem da Planilha (1–30)</option>
-                <option value="PENDENCIA">Priorizar Pendências (Refazer)</option>
-                <option value="PROGRESSO_DESC">Maior Progresso (%)</option>
-                <option value="PROGRESSO_ASC">Menor Progresso (%)</option>
+                <option value="ORDEM">Ordem (1–30)</option>
+                <option value="PENDENCIA">Priorizar Refazer</option>
+                <option value="PROGRESSO_DESC">Maior Avanço (%)</option>
+                <option value="PROGRESSO_ASC">Menor Avanço (%)</option>
               </select>
 
               {hasActiveFilters && (
                 <button
                   type="button"
                   onClick={clearAllFilters}
-                  className="px-2.5 py-1.5 text-xs font-bold uppercase text-white bg-[#b91c1c] hover:bg-[#991b1b] flex items-center gap-1 cursor-pointer"
+                  className="px-2 py-1 text-xs font-bold uppercase text-white bg-[#b91c1c] hover:bg-[#991b1b] flex items-center gap-1 cursor-pointer"
                 >
-                  <Filter className="w-3.5 h-3.5" />
-                  <span>Limpar Filtros ({filteredProcessos.length}/{data.totalProcessos})</span>
+                  <Filter className="w-3 h-3" />
+                  <span>Limpar ({filteredProcessos.length}/{data.totalProcessos})</span>
                 </button>
               )}
             </div>
 
             {/* View Switcher & Legend */}
-            <div className="flex flex-wrap items-center justify-between xl:justify-end gap-3">
+            <div className="flex flex-wrap items-center justify-between xl:justify-end gap-2.5">
               {/* Sober Dark Legend */}
-              <div className="flex items-center gap-3 text-[11px] text-[#b4c9be]">
+              <div className="flex items-center gap-2.5 text-[10px] text-[#b4c9be]">
                 <span className="flex items-center gap-1">
-                  <span className="w-3 h-3 bg-[#2f7958] border border-[#3da174] inline-block" /> Concluído
+                  <span className="w-2.5 h-2.5 bg-[#2f7958] border border-[#3da174] inline-block" /> Concluído
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="w-3 h-3 border-2 border-[#f59e0b] bg-[#3b2506] inline-block" /> Etapa Atual
+                  <span className="w-2.5 h-2.5 border border-[#f59e0b] bg-[#3b2506] inline-block" /> Atual
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="w-3 h-3 bg-[#b91c1c] border border-[#ef4444] inline-block" /> Refazer
+                  <span className="w-2.5 h-2.5 bg-[#b91c1c] border border-[#ef4444] inline-block" /> Refazer
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="w-3 h-3 bg-[#0e1713] border border-[#23382d] inline-block" /> Pendente
+                  <span className="w-2.5 h-2.5 bg-[#0e1713] border border-[#23382d] inline-block" /> Pendente
                 </span>
               </div>
 
@@ -908,7 +818,7 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
                 <button
                   type="button"
                   onClick={() => setViewMode("MATRIZ")}
-                  className={`px-3 py-1 text-xs font-bold uppercase cursor-pointer ${
+                  className={`px-2.5 py-0.5 text-[11px] font-bold uppercase cursor-pointer ${
                     viewMode === "MATRIZ"
                       ? "bg-[#2f7958] text-white"
                       : "bg-[#0a110e] text-[#b4c9be] hover:bg-[#17261f]"
@@ -919,7 +829,7 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
                 <button
                   type="button"
                   onClick={() => setViewMode("RESUMO")}
-                  className={`px-3 py-1 text-xs font-bold uppercase border-l border-[#345243] cursor-pointer ${
+                  className={`px-2.5 py-0.5 text-[11px] font-bold uppercase border-l border-[#345243] cursor-pointer ${
                     viewMode === "RESUMO"
                       ? "bg-[#2f7958] text-white"
                       : "bg-[#0a110e] text-[#b4c9be] hover:bg-[#17261f]"
@@ -934,9 +844,9 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
 
         {/* MAIN PROCESS TRACKING SECTION */}
         <section aria-label="Andamento dos Processos" className="bg-[#111c17] border border-[#23382d]">
-          <div className="px-4 py-2.5 bg-[#004a2f] border-b border-[#2f7958] text-white flex flex-wrap items-center justify-between gap-2">
+          <div className="px-3.5 py-1.5 bg-[#004a2f] border-b border-[#2f7958] text-white flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-3">
-              <h2 className="text-xs sm:text-sm font-bold uppercase tracking-wider">
+              <h2 className="text-xs font-bold uppercase tracking-wider">
                 RELAÇÃO DE PROCESSOS ADMINISTRATIVOS DE COMPRAS
               </h2>
               <span className="text-xs text-[#a2c682] font-semibold tabular-nums">
@@ -949,7 +859,7 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
           </div>
 
           {filteredProcessos.length === 0 ? (
-            <div className="p-12 text-center">
+            <div className="p-10 text-center">
               <p className="text-sm font-semibold text-[#b4c9be]">
                 Nenhum processo corresponde aos critérios de filtro selecionados.
               </p>
@@ -970,52 +880,52 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
                     <thead>
                       {/* Group Header Row */}
                       <tr className="bg-[#16241d] border-b border-[#345243] text-[10px] font-bold uppercase tracking-wider text-[#a2c682]">
-                        <th className="py-1.5 px-2 text-center border-r border-[#23382d]">
+                        <th className="py-1 px-2 text-center border-r border-[#23382d]">
                           Item
                         </th>
-                        <th className="py-1.5 px-2.5 text-center bg-[#182921] border-r border-[#345243] text-[#a2c682]">
+                        <th className="py-1 px-2 text-center bg-[#182921] border-r border-[#345243] text-[#a2c682]">
                           Proc. Int.
                         </th>
-                        <th colSpan={2} className="py-1.5 px-3 border-r border-[#345243]">
+                        <th colSpan={2} className="py-1 px-3 border-r border-[#345243]">
                           Identificação do Objeto e Responsável
                         </th>
                         <th
                           colSpan={6}
-                          className="py-1.5 px-2 text-center bg-[#182921] border-r border-[#345243] text-[#a2c682]"
+                          className="py-1 px-2 text-center bg-[#182921] border-r border-[#345243] text-[#a2c682]"
                         >
                           Fase Interna (6 Etapas)
                         </th>
-                        <th className="py-1.5 px-2.5 text-center bg-[#182921] border-r border-[#345243] text-[#a2c682]">
+                        <th className="py-1 px-2 text-center bg-[#182921] border-r border-[#345243] text-[#a2c682]">
                           Proc. Ext.
                         </th>
                         <th
                           colSpan={18}
-                          className="py-1.5 px-2 text-center bg-[#14221b] border-r border-[#345243] text-[#a2c682]"
+                          className="py-1 px-2 text-center bg-[#14221b] border-r border-[#345243] text-[#a2c682]"
                         >
                           Fase Externa (18 Etapas)
                         </th>
-                        <th colSpan={2} className="py-1.5 px-3 text-center">
+                        <th colSpan={2} className="py-1 px-3 text-center">
                           Situação Atual
                         </th>
                       </tr>
 
                       {/* Step Column Headers */}
                       <tr className="bg-[#111c17] border-b-2 border-[#2f7958] text-[10px] font-bold uppercase text-[#b4c9be]">
-                        <th className="py-2 px-2 text-center w-9 border-r border-[#23382d]">#</th>
-                        <th className="py-2 px-2.5 w-28 text-center border-r border-[#345243] bg-[#15231c] text-[#f1f7f4]">
+                        <th className="py-1.5 px-2 text-center w-9 border-r border-[#23382d]">#</th>
+                        <th className="py-1.5 px-2 w-28 text-center border-r border-[#345243] bg-[#15231c] text-[#f1f7f4]">
                           Nº Interno
                         </th>
-                        <th className="py-2 px-3 min-w-[230px] max-w-[360px] border-r border-[#23382d]">
+                        <th className="py-1.5 px-3 min-w-[230px] max-w-[380px] border-r border-[#23382d]">
                           Objeto / Modalidade
                         </th>
-                        <th className="py-2 px-2 w-20 border-r border-[#345243]">Agente</th>
+                        <th className="py-1.5 px-2 w-20 border-r border-[#345243]">Agente</th>
 
                         {/* 6 Internal Step Columns */}
                         {INTERNAL_STEPS_META.map((m, i) => (
                           <th
                             key={m.code}
                             title={m.fullLabel}
-                            className={`py-2 px-0.5 text-center w-9 bg-[#14211b] ${
+                            className={`py-1.5 px-0.5 text-center w-9 bg-[#14211b] ${
                               i === 5 ? "border-r border-[#345243]" : "border-r border-[#23382d]"
                             }`}
                           >
@@ -1026,7 +936,7 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
                         ))}
 
                         {/* External Process Number - Exact same width & typography as Internal Process Number */}
-                        <th className="py-2 px-2.5 w-28 text-center border-r border-[#345243] bg-[#15231c] text-[#f1f7f4]">
+                        <th className="py-1.5 px-2 w-28 text-center border-r border-[#345243] bg-[#15231c] text-[#f1f7f4]">
                           Nº Externo
                         </th>
 
@@ -1035,7 +945,7 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
                           <th
                             key={m.code}
                             title={m.fullLabel}
-                            className={`py-2 px-0.5 text-center w-9 ${
+                            className={`py-1.5 px-0.5 text-center w-9 ${
                               i === 17 ? "border-r border-[#345243]" : "border-r border-[#23382d]"
                             }`}
                           >
@@ -1045,10 +955,10 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
                           </th>
                         ))}
 
-                        <th className="py-2 px-2.5 w-44 border-r border-[#23382d]">
+                        <th className="py-1.5 px-2.5 w-44 border-r border-[#23382d]">
                           Etapa Atual / Ação
                         </th>
-                        <th className="py-2 px-2.5 w-20 text-right">Avanço</th>
+                        <th className="py-1.5 px-2 w-20 text-right">Avanço</th>
                       </tr>
                     </thead>
 
@@ -1074,7 +984,7 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
                           >
                             {/* # Ordem */}
                             <td
-                              className={`py-2.5 px-2 text-center font-bold border-r border-[#23382d] ${
+                              className={`py-1.5 px-2 text-center font-bold border-r border-[#23382d] ${
                                 proc.temPendencia
                                   ? "border-l-4 border-l-[#ef4444] text-[#f87171]"
                                   : proc.macroFase === "FASE_EXTERNA"
@@ -1087,21 +997,21 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
 
                             {/* Processo Interno - Equal size & prominence to Processo Externo */}
                             <td
-                              className={`py-2.5 px-2.5 text-center font-bold ${procNumberTextSize} text-[#a2c682] bg-[#14211b] border-r border-[#345243] whitespace-nowrap tracking-tight`}
+                              className={`py-1.5 px-2 text-center font-bold ${procNumberTextSize} text-[#a2c682] bg-[#14211b] border-r border-[#345243] whitespace-nowrap tracking-tight`}
                             >
                               {proc.processoInterno}
                             </td>
 
                             {/* Objeto + Modalidade */}
-                            <td className="py-2.5 px-3 border-r border-[#23382d] max-w-[360px]">
-                              <div className="flex items-start gap-1.5">
+                            <td className="py-1.5 px-3 border-r border-[#23382d] max-w-[380px]">
+                              <div className="flex items-center gap-1.5">
                                 {proc.modalidade !== "Compra Direta / Dispensa" && (
-                                  <span className="shrink-0 text-[10px] font-bold uppercase px-1.5 py-0.5 bg-[#004a2f] border border-[#3da174] text-[#f1f7f4]">
+                                  <span className="shrink-0 text-[9px] font-bold uppercase px-1 py-0.2 bg-[#004a2f] border border-[#3da174] text-[#f1f7f4]">
                                     {proc.modalidade}
                                   </span>
                                 )}
                                 <span
-                                  className={`font-medium text-[#f1f7f4] line-clamp-2 leading-snug ${
+                                  className={`font-medium text-[#f1f7f4] truncate leading-snug ${
                                     tvMode ? "text-sm 2xl:text-base" : "text-xs"
                                   }`}
                                   title={proc.objetoRaw}
@@ -1112,7 +1022,7 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
                             </td>
 
                             {/* Agente */}
-                            <td className="py-2.5 px-2 text-xs font-semibold text-[#b4c9be] border-r border-[#345243] whitespace-nowrap">
+                            <td className="py-1.5 px-2 text-xs font-semibold text-[#b4c9be] border-r border-[#345243] whitespace-nowrap">
                               {proc.agente}
                             </td>
 
@@ -1134,7 +1044,7 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
 
                             {/* Processo Externo - Equal size & prominence to Processo Interno */}
                             <td
-                              className={`py-2.5 px-2.5 text-center font-bold ${procNumberTextSize} bg-[#14211b] border-r border-[#345243] whitespace-nowrap tracking-tight`}
+                              className={`py-1.5 px-2 text-center font-bold ${procNumberTextSize} bg-[#14211b] border-r border-[#345243] whitespace-nowrap tracking-tight`}
                             >
                               {proc.processoExterno ? (
                                 <span className="text-[#a2c682]">{proc.processoExterno}</span>
@@ -1160,22 +1070,17 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
                             })}
 
                             {/* Etapa Atual / Ação */}
-                            <td className="py-2.5 px-2.5 border-r border-[#23382d] text-xs">
+                            <td className="py-1.5 px-2.5 border-r border-[#23382d] text-xs max-w-[180px]">
                               {proc.temPendencia ? (
                                 <div className="font-bold text-[#f87171] flex items-center gap-1">
-                                  <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-[#ef4444]" />
+                                  <AlertTriangle className="w-3 h-3 shrink-0 text-[#ef4444]" />
                                   <span className="truncate">
                                     REFAZER: {proc.pendencias.join(", ")}
                                   </span>
                                 </div>
                               ) : proc.proximaEtapa ? (
-                                <div>
-                                  <div className="text-[10px] font-bold uppercase text-[#7d998a]">
-                                    Aguardando:
-                                  </div>
-                                  <div className="font-semibold text-[#fde68a] truncate">
-                                    {proc.proximaEtapa.label}
-                                  </div>
+                                <div className="font-semibold text-[#fde68a] truncate" title={`Aguardando: ${proc.proximaEtapa.label}`}>
+                                  {proc.proximaEtapa.label}
                                 </div>
                               ) : (
                                 <div className="font-bold text-[#3da174]">
@@ -1185,14 +1090,14 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
                             </td>
 
                             {/* Progresso */}
-                            <td className="py-2.5 px-2.5 text-right whitespace-nowrap">
-                              <div className="flex items-center justify-end gap-1.5">
+                            <td className="py-1.5 px-2 text-right whitespace-nowrap">
+                              <div className="flex items-center justify-end gap-1">
                                 <span className="font-bold text-xs text-[#a2c682]">
                                   {proc.progressoTotal}%
                                 </span>
-                                <Eye className="w-3.5 h-3.5 text-[#7d998a]" />
+                                <Eye className="w-3 h-3 text-[#7d998a]" />
                               </div>
-                              <div className="w-full h-1.5 bg-[#0a110e] mt-1">
+                              <div className="w-full h-1 bg-[#0a110e] mt-0.5">
                                 <div
                                   className={`h-full ${
                                     proc.temPendencia ? "bg-[#ef4444]" : "bg-[#3da174]"
@@ -1211,16 +1116,16 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
                   <table className="w-full border-collapse text-left tabular-nums">
                     <thead>
                       <tr className="bg-[#16241d] border-b-2 border-[#2f7958] text-[11px] font-bold uppercase text-[#a2c682]">
-                        <th className="py-2.5 px-3 w-12 text-center border-r border-[#23382d]">#</th>
-                        <th className="py-2.5 px-3 w-32 text-center border-r border-[#23382d]">Proc. Interno</th>
-                        <th className="py-2.5 px-3 w-32 text-center border-r border-[#23382d]">Proc. Externo</th>
-                        <th className="py-2.5 px-3 border-r border-[#23382d]">Objeto da Contratação</th>
-                        <th className="py-2.5 px-3 w-36 border-r border-[#23382d]">Modalidade</th>
-                        <th className="py-2.5 px-3 w-28 border-r border-[#23382d]">Agente</th>
-                        <th className="py-2.5 px-3 w-48 border-r border-[#23382d]">Estágio Atual</th>
-                        <th className="py-2.5 px-3 w-52 border-r border-[#23382d]">Última Etapa Concluída</th>
-                        <th className="py-2.5 px-3 w-52 border-r border-[#23382d]">Próxima Etapa / Ação</th>
-                        <th className="py-2.5 px-3 w-44">Andamento (24 Etapas)</th>
+                        <th className="py-2 px-3 w-12 text-center border-r border-[#23382d]">#</th>
+                        <th className="py-2 px-3 w-32 text-center border-r border-[#23382d]">Proc. Interno</th>
+                        <th className="py-2 px-3 w-32 text-center border-r border-[#23382d]">Proc. Externo</th>
+                        <th className="py-2 px-3 border-r border-[#23382d]">Objeto da Contratação</th>
+                        <th className="py-2 px-3 w-36 border-r border-[#23382d]">Modalidade</th>
+                        <th className="py-2 px-3 w-28 border-r border-[#23382d]">Agente</th>
+                        <th className="py-2 px-3 w-48 border-r border-[#23382d]">Estágio Atual</th>
+                        <th className="py-2 px-3 w-52 border-r border-[#23382d]">Última Etapa Concluída</th>
+                        <th className="py-2 px-3 w-52 border-r border-[#23382d]">Próxima Etapa / Ação</th>
+                        <th className="py-2 px-3 w-44">Andamento (24 Etapas)</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#23382d]">
@@ -1244,7 +1149,7 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
                             }`}
                           >
                             <td
-                              className={`py-2.5 px-3 text-center font-bold border-r border-[#23382d] ${
+                              className={`py-1.5 px-3 text-center font-bold border-r border-[#23382d] ${
                                 proc.temPendencia
                                   ? "border-l-4 border-l-[#ef4444] text-[#f87171]"
                                   : proc.macroFase === "FASE_EXTERNA"
@@ -1255,28 +1160,28 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
                               {proc.ordem}
                             </td>
                             <td
-                              className={`py-2.5 px-3 text-center font-bold ${procNumberTextSize} text-[#a2c682] bg-[#14211b] border-r border-[#23382d] whitespace-nowrap`}
+                              className={`py-1.5 px-3 text-center font-bold ${procNumberTextSize} text-[#a2c682] bg-[#14211b] border-r border-[#23382d] whitespace-nowrap`}
                             >
                               {proc.processoInterno}
                             </td>
                             <td
-                              className={`py-2.5 px-3 text-center font-bold ${procNumberTextSize} text-[#a2c682] bg-[#14211b] border-r border-[#23382d] whitespace-nowrap`}
+                              className={`py-1.5 px-3 text-center font-bold ${procNumberTextSize} text-[#a2c682] bg-[#14211b] border-r border-[#23382d] whitespace-nowrap`}
                             >
                               {proc.processoExterno || <span className="text-[#526b5e]">—</span>}
                             </td>
-                            <td className="py-2.5 px-3 font-medium text-[#f1f7f4] border-r border-[#23382d]">
+                            <td className="py-1.5 px-3 font-medium text-[#f1f7f4] border-r border-[#23382d]">
                               {proc.objeto}
                             </td>
-                            <td className="py-2.5 px-3 text-xs font-semibold text-[#b4c9be] border-r border-[#23382d]">
+                            <td className="py-1.5 px-3 text-xs font-semibold text-[#b4c9be] border-r border-[#23382d]">
                               {proc.modalidade}
                             </td>
-                            <td className="py-2.5 px-3 font-semibold text-[#f1f7f4] border-r border-[#23382d]">
+                            <td className="py-1.5 px-3 font-semibold text-[#f1f7f4] border-r border-[#23382d]">
                               {proc.agente}
                             </td>
-                            <td className="py-2.5 px-3 text-xs font-semibold text-[#a2c682] border-r border-[#23382d]">
+                            <td className="py-1.5 px-3 text-xs font-semibold text-[#a2c682] border-r border-[#23382d]">
                               {proc.estagioLabel}
                             </td>
-                            <td className="py-2.5 px-3 text-xs border-r border-[#23382d]">
+                            <td className="py-1.5 px-3 text-xs border-r border-[#23382d]">
                               {proc.ultimaEtapaConcluida ? (
                                 <div>
                                   <span className="font-semibold text-[#f1f7f4]">
@@ -1290,7 +1195,7 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
                                 <span className="text-[#7d998a]">—</span>
                               )}
                             </td>
-                            <td className="py-2.5 px-3 text-xs border-r border-[#23382d]">
+                            <td className="py-1.5 px-3 text-xs border-r border-[#23382d]">
                               {proc.temPendencia ? (
                                 <span className="font-bold text-[#f87171]">
                                   REFAZER: {proc.pendencias.join(", ")}
@@ -1303,14 +1208,14 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
                                 <span className="font-bold text-[#3da174]">Concluído</span>
                               )}
                             </td>
-                            <td className="py-2.5 px-3">
+                            <td className="py-1.5 px-3">
                               <div className="flex items-center justify-between text-xs font-bold mb-1">
                                 <span className="text-[#b4c9be]">
                                   {proc.concluidasTotal}/{proc.aplicaveisTotal} etapas
                                 </span>
                                 <span className="text-[#a2c682]">{proc.progressoTotal}%</span>
                               </div>
-                              <div className="w-full h-2 bg-[#0a110e]">
+                              <div className="w-full h-1.5 bg-[#0a110e]">
                                 <div
                                   className={`h-full ${
                                     proc.temPendencia ? "bg-[#ef4444]" : "bg-[#3da174]"
@@ -1343,7 +1248,7 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
                           : "border-l-4 border-l-[#658b61] bg-[#111c17] hover:bg-[#17261f]"
                       }`}
                     >
-                      <div className="space-y-2.5">
+                      <div className="space-y-2">
                         {/* Top Identification Bar - Equal font size for Interno and Externo */}
                         <div className="flex items-center justify-between gap-2 tabular-nums">
                           <div className="flex items-center gap-2 flex-wrap">
@@ -1378,7 +1283,7 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
                         </div>
 
                         {/* Metadata & Current Stage */}
-                        <div className="grid grid-cols-2 gap-2 pt-1.5 text-[11px] border-t border-[#23382d]">
+                        <div className="grid grid-cols-2 gap-2 pt-1 text-[11px] border-t border-[#23382d]">
                           <div>
                             <span className="text-[#7d998a] uppercase font-bold block text-[9px]">
                               Agente Responsável
@@ -1405,7 +1310,7 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
 
                         {/* Mini 24-Step Segmented Strip */}
                         <div className="space-y-1 pt-1">
-                          <div className="grid grid-cols-24 gap-[2px] h-2.5">
+                          <div className="grid grid-cols-24 gap-[2px] h-2">
                             {proc.todasEtapas.map((s) => (
                               <div
                                 key={`${proc.ordem}-${s.index}`}
@@ -1423,14 +1328,6 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
                                 }`}
                               />
                             ))}
-                          </div>
-                          <div className="flex justify-between text-[10px] text-[#7d998a] tabular-nums">
-                            <span>
-                              Fase Interna: {proc.concluidasInternas}/{proc.aplicaveisInternas}
-                            </span>
-                            <span>
-                              Fase Externa: {proc.concluidasExternas}/{proc.aplicaveisExternas}
-                            </span>
                           </div>
                         </div>
                       </div>
@@ -1455,7 +1352,7 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
 
       {/* INSTITUTIONAL FOOTER */}
       <footer className="bg-[#111c17] border-t border-[#23382d] mt-auto">
-        <div className="max-w-[2400px] mx-auto px-3 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[#b4c9be]">
+        <div className="max-w-[2400px] mx-auto px-3 sm:px-5 py-2 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[#b4c9be]">
           <div className="flex items-center gap-2">
             <strong className="text-[#a2c682] uppercase">Câmara Municipal de Bauru</strong>
             <span className="text-[#345243]">•</span>
@@ -1540,7 +1437,7 @@ function SyncStatusBar({
 
   return (
     <div className="bg-[#071f14] text-white border-b border-[#1c3d2d]">
-      <div className="max-w-[2400px] mx-auto px-3 sm:px-6 py-1.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+      <div className="max-w-[2400px] mx-auto px-3 sm:px-5 py-1 flex flex-wrap items-center justify-between gap-2 text-[11px]">
         <div className="flex items-center gap-3">
           <span className="font-semibold tracking-wider uppercase text-[#a2c682]">
             PODER LEGISLATIVO • MUNICÍPIO DE BAURU / SP
@@ -1571,7 +1468,7 @@ function SyncStatusBar({
         </div>
       </div>
       {/* 30-second progress line */}
-      <div className="w-full h-[3px] bg-[#0a110e] overflow-hidden">
+      <div className="w-full h-[2px] bg-[#0a110e] overflow-hidden">
         <div
           className="h-full bg-[#3da174] transition-all duration-1000 ease-linear"
           style={{ width: `${((REFRESH_INTERVAL_SEC - secondsLeft) / REFRESH_INTERVAL_SEC) * 100}%` }}
@@ -1599,7 +1496,7 @@ function MatrixStepCell({
   if (step.status === "REFAZER") {
     return (
       <td title={tooltip} className={`p-0.5 text-center align-middle ${borderClass}`}>
-        <div className="w-full h-6 bg-[#b91c1c] border border-[#ef4444] text-white flex items-center justify-center text-[9px] font-bold tracking-tighter">
+        <div className="w-full h-5 bg-[#b91c1c] border border-[#ef4444] text-white flex items-center justify-center text-[9px] font-bold tracking-tighter">
           REF
         </div>
       </td>
@@ -1611,7 +1508,7 @@ function MatrixStepCell({
     return (
       <td title={tooltip} className={`p-0.5 text-center align-middle ${borderClass}`}>
         <div
-          className={`w-full h-6 ${
+          className={`w-full h-5 ${
             step.phase === "INTERNA"
               ? "bg-[#256347] border border-[#3da174]"
               : "bg-[#1b5239] border border-[#2f7958]"
@@ -1629,7 +1526,7 @@ function MatrixStepCell({
         title={`${step.fullLabel}: Não se aplica (${step.rawValue})`}
         className={`p-0.5 text-center align-middle ${borderClass}`}
       >
-        <div className="w-full h-6 bg-[#16231d] text-[#7d998a] flex items-center justify-center text-[9px] font-semibold">
+        <div className="w-full h-5 bg-[#16231d] text-[#7d998a] flex items-center justify-center text-[9px] font-semibold">
           N/A
         </div>
       </td>
@@ -1640,9 +1537,9 @@ function MatrixStepCell({
   return (
     <td title={tooltip} className={`p-0.5 text-center align-middle ${borderClass}`}>
       <div
-        className={`w-full h-6 flex items-center justify-center text-[9px] ${
+        className={`w-full h-5 flex items-center justify-center text-[9px] ${
           isCurrentNext
-            ? "border-2 border-[#f59e0b] bg-[#3b2506] text-[#fde68a] font-bold"
+            ? "border border-[#f59e0b] bg-[#3b2506] text-[#fde68a] font-bold"
             : "bg-[#0d1612] text-transparent"
         }`}
       >
